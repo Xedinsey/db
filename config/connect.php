@@ -1,2 +1,2 @@
 <?php
-    $connect = mysqli_connect('maksibond.dev', 'max', 'Analitik123!', 'сотрудники');
+    $connect = mysqli_connect('maksibond.dev', 'max', 'Analitik123!', 'BookStore');

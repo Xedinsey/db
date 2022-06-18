@@ -1,7 +1,12 @@
 <?php
-    require_once 'config/connect.php';
-    $employees = mysqli_query($connect, "SELECT * FROM `employees`");
-    $employees = mysqli_fetch_all($employees);
+require_once 'config/connect.php';
+$books = mysqli_query($connect, "SELECT `books`.`title`, `books`.`year`, `writers`.`writer`, `books_genres`.`id_genres`, `genres`.`genre` FROM `books` LEFT JOIN `writers` ON `books`.`id_writer` = `writers`.`id` LEFT JOIN `books_genres` ON `books_genres`.`id_books` = `books`.`id` LEFT JOIN `genres` ON `books_genres`.`id_genres` = `genres`.`id` ORDER BY `id_writer` DESC");
+$books = mysqli_fetch_all($books);
+$users = mysqli_query($connect, "SELECT `users`.*FROM `users`;");
+$users = mysqli_fetch_all($users);
+$orders = mysqli_query($connect, "SELECT `users`.*, `orders`.`id_user`, `order_books`.`id_books`, `books`.`title` FROM `users` LEFT JOIN `orders` ON `orders`.`id_user` = `users`.`id` LEFT JOIN `order_books` ON `order_books`.`id_order` = `orders`.`id` LEFT JOIN `books` ON `order_books`.`id_books` = `books`.`id`;");
+$orders = mysqli_fetch_all($orders);
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -13,43 +18,108 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <table>
+<h2>Список пользователей</h2>
+<table class="table_sort">
+    <thead>
+    <tr>
+        <th>#</th>
+        <th>Имя</th>
+        <th>Фамилия</th>
+        <th>email</th>
+    </tr>
+    </thead>
+    <tbody>
+    <?php
+    foreach ($users as $item) {
+        ?>
         <tr>
-            <th>id</th>
-            <th>Имя</th>
-            <th>Фамилия</th>
-            <th>Дата рождения</th>
-            <th>Дата приема на работу</th>
-            <th>Пол</th>
+            <td><?= $item[0] ?></td>
+            <td><?= $item[1] ?></td>
+            <td><?= $item[2] ?></td>
+            <td><?= $item[3] ?></td>
         </tr>
         <?php
-            foreach($employees as $item) {
-                ?>
-                    <tr>
-                        <td><?= $item[0] ?></td>
-                        <td><?= $item[1] ?></td>
-                        <td><?= $item[2] ?></td>
-                        <td><?= $item[3] ?></td>
-                        <td><?= $item[4] ?></td>
-                        <td><?= $item[5] ?></td>
-                    </tr>
-                <?php
-            }
+    }
+    ?>
+    </tbody>
+</table>
+<h2>Список книг</h2>
+<table class="table_sort">
+    <thead>
+    <tr>
+        <th>#</th>
+        <th>Название</th>
+        <th>Год публикации</th>
+        <th>Автор</th>
+        <th>Жанр</th>
+    </tr>
+    </thead>
+    <tbody>
+    <?php
+    foreach ($books as $item) {
         ?>
-    </table>
-    <h2>Добавить нового работника</h2>
-    <form action="vendor/create.php" method="post">
-        <p>Имя</p>
-        <input type="text" name="first-name">
-        <p>Фамилия</p>
-        <input type="text" name="last-name">
-        <p>Дата рождения</p>
-        <input type="date" name="date_birth">
-        <p>Дата приема на работу</p>
-        <input type="date" name="hire_date">
-        <p>Пол</p>
-        <p><input name="gender" type="radio" value="M"> Мужской</p>
-        <p><input name="gender" type="radio" value="F" checked> Женский</p>
-    </form>
+        <tr>
+            <td><?= $item[3] ?></td>
+            <td><?= $item[0] ?></td>
+            <td><?= $item[1] ?></td>
+            <td><?= $item[2] ?></td>
+            <td><?= $item[4] ?></td>
+        </tr>
+        <?php
+    }
+    ?>
+    </tbody>
+</table>
+<br>
+<h2>Список заказов</h2>
+<table class="table_sort">
+    <thead>
+    <tr>
+        <th>#</th>
+        <th>Имя</th>
+        <th>Фамилия</th>
+        <th>email</th>
+        <th>Название книги</th>
+    </tr>
+    </thead>
+    <tbody>
+    <?php
+    foreach ($orders as $item) {
+        ?>
+        <tr>
+            <td><?= $item[0] ?></td>
+            <td><?= $item[1] ?></td>
+            <td><?= $item[2] ?></td>
+            <td><?= $item[3] ?></td>
+            <td><?= $item[6] ?></td>
+        </tr>
+        <?php
+    }
+    ?>
+    </tbody>
+</table>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+        const getSort = ({target}) => {
+            const order = (target.dataset.order = -(target.dataset.order || -1));
+            const index = [...target.parentNode.cells].indexOf(target);
+            const collator = new Intl.Collator(['en', 'ru'], {numeric: true});
+            const comparator = (index, order) => (a, b) => order * collator.compare(
+                a.children[index].innerHTML,
+                b.children[index].innerHTML
+            );
+
+            for (const tBody of target.closest('table').tBodies)
+                tBody.append(...[...tBody.rows].sort(comparator(index, order)));
+
+            for (const cell of target.parentNode.cells)
+                cell.classList.toggle('sorted', cell === target);
+        };
+
+        document.querySelectorAll('.table_sort thead').forEach(tableTH => tableTH.addEventListener('click', () => getSort(event)));
+
+    });
+</script>
 </body>
 </html>
